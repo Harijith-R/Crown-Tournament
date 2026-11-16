@@ -1,0 +1,64 @@
+import type { CategoryConfig, CategoryId } from '../types/tournament';
+
+export const CATEGORIES: CategoryConfig[] = [
+  {
+    id: 'blue',
+    name: 'BLUE',
+    tierLabel: 'Blue Category',
+    totalPairs: 8,
+    groupDistribution: '2 groups of 4',
+    groups: ['A', 'B'],
+    groupSizes: { A: 4, B: 4 },
+    qualificationRule: 'Top 2 from each group qualify for semifinals.',
+    qualifiersPerGroup: 2,
+    knockoutRounds: ['Semifinals', 'Final'],
+    accentHex: '#3B82F6',
+    softBgClass: 'bg-blue-500/10',
+    borderClass: 'border-blue-500/35',
+    textClass: 'text-blue-400',
+    description:
+      'An elite 8-pair sprint division split into two compact four-team groups where every single rally carries direct semifinal consequence.',
+  },
+  {
+    id: 'orange',
+    name: 'ORANGE',
+    tierLabel: 'Orange Category',
+    totalPairs: 18,
+    groupDistribution: '4 groups containing 5, 5, 4 and 4 pairs',
+    groups: ['A', 'B', 'C', 'D'],
+    groupSizes: { A: 5, B: 5, C: 4, D: 4 },
+    qualificationRule: 'Top 2 from each group qualify for quarter-finals.',
+    qualifiersPerGroup: 2,
+    knockoutRounds: ['Quarter-finals', 'Semifinals', 'Final'],
+    accentHex: '#F97316',
+    softBgClass: 'bg-orange-500/10',
+    borderClass: 'border-orange-500/35',
+    textClass: 'text-orange-400',
+    description:
+      'The tournament’s largest championship bracket featuring 18 pairs battling through four demanding groups into an eight-pair quarter-final gauntlet.',
+  },
+  {
+    id: 'yellow',
+    name: 'YELLOW',
+    tierLabel: 'Yellow Category',
+    totalPairs: 10,
+    groupDistribution: '2 groups of 5',
+    groups: ['A', 'B'],
+    groupSizes: { A: 5, B: 5 },
+    qualificationRule: 'Top 2 from each group qualify for semifinals.',
+    qualifiersPerGroup: 2,
+    knockoutRounds: ['Semifinals', 'Final'],
+    accentHex: '#EAB308',
+    softBgClass: 'bg-yellow-500/10',
+    borderClass: 'border-yellow-500/35',
+    textClass: 'text-yellow-300',
+    description:
+      'Ten determined doubles pairings divided across two five-pair round-robin pools, testing stamina and consistency on the path to the semifinals.',
+  },
+];
+
+export const CATEGORY_MAP: Record<CategoryId, CategoryConfig> = {
+  blue: CATEGORIES[0],
+  orange: CATEGORIES[1],
+  yellow: CATEGORIES[2],
+};

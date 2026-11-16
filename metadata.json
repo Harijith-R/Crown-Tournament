@@ -1,0 +1,6 @@
+{
+  "name": "Crown Tournament 2026",
+  "description": "Men's Doubles Badminton Championship at Muthooth Badminton Academy, Kerala, India (28 November – 13 December 2026).",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

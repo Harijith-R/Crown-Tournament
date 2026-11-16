@@ -1,0 +1,90 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-obsidian: #090909;
+    --bg-charcoal: #151515;
+    --accent-gold: #D4AF37;
+    --accent-champagne: #F5D77A;
+    --text-primary: #FFFFFF;
+    --text-muted: #A1A1A1;
+  }
+
+  html {
+    background-color: #090909;
+    color: #ffffff;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    overflow-x: hidden;
+  }
+
+  body {
+    background-color: #090909;
+    color: #ffffff;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+.font-display {
+  font-family: 'Cinzel', Georgia, serif;
+}
+
+.font-sans-body {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.font-mono-data {
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.text-balance {
+  text-wrap: balance;
+}
+
+.gold-gradient-text {
+  background: linear-gradient(135deg, #F5D77A 0%, #D4AF37 52%, #A67C1E 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.gold-hairline {
+  border-color: rgba(212, 175, 55, 0.24);
+}
+
+.surface-panel {
+  background: rgba(21, 21, 21, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.surface-panel-gold {
+  background: linear-gradient(180deg, rgba(24, 21, 14, 0.92) 0%, rgba(16, 16, 16, 0.94) 100%);
+  border: 1px solid rgba(212, 175, 55, 0.28);
+}
+
+/* Custom subtle scrollbars for tables & page */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #090909;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #272727;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #D4AF37;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
+}
