@@ -35,13 +35,12 @@ npm run preview
 ## GitHub Pages Deployment
 
 1. Push the repository to GitHub on the `main` branch.
-2. In **Settings → Pages**, set **Source** to **GitHub Actions**.
-3. The included workflow (`.github/workflows/deploy.yml`) automatically runs `npm ci`, `npm run build`, and deploys `./dist` to GitHub Pages.
+2. In **Settings → Pages → Build and deployment**, set **Source** to **GitHub Actions** (do **not** use "Deploy from a branch" on `main`, as that serves raw uncompiled `.tsx` source files and causes a blank page).
+3. Verify the **Deploy Crown Tournament 2026 to GitHub Pages** workflow runs and succeeds in the **Actions** tab, automatically building and publishing `./dist`.
 4. Because `vite.config.ts` uses `base: './'` and routing uses `HashRouter` (`/#/` and `/#/fixtures-results`), the application supports:
    - GitHub project URLs (`https://<username>.github.io/<repo>/`)
    - Direct page refreshes on any route
-   - Future custom domains without modifying code
-5. To attach a custom domain later, configure your DNS records and add a `public/CNAME` file containing your domain name.
+   - Custom domains (configured via `public/CNAME`, currently `crown.harijith.com`)
 
 ## Updating Official Tournament Data
 
