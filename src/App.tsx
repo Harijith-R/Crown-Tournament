@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { Component, lazy, Suspense, type ReactNode } from 'react';
 import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Navbar } from './components/Navbar';
@@ -14,11 +14,32 @@ const ChampionshipCanvas = lazy(() =>
   }))
 );
 
+class CanvasErrorBoundary extends Component<
+  { children: ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return <WebGLFallback />;
+    }
+    return this.props.children;
+  }
+}
+
 function AnimatedRoutes() {
   const location = useLocation();
 
   return (
-    <AnimatePresence mode="wait">
+    <AnimatePresence initial={false} mode="wait">
       <motion.main
         key={location.pathname}
         initial={{ opacity: 0 }}
@@ -42,9 +63,11 @@ export default function App() {
     <HashRouter>
       <div className="relative min-h-screen bg-[#090909] text-white selection:bg-[#D4AF37]/30 selection:text-[#F5D77A]">
         {/* Persistent Root-Level 3D Canvas — remains mounted across all route changes */}
-        <Suspense fallback={<WebGLFallback />}>
-          <ChampionshipCanvas />
-        </Suspense>
+        <CanvasErrorBoundary>
+          <Suspense fallback={<WebGLFallback />}>
+            <ChampionshipCanvas />
+          </Suspense>
+        </CanvasErrorBoundary>
 
         {/* Fixed Top Navigation */}
         <Navbar />

@@ -1,6 +1,64 @@
-import type { TournamentMilestone, TournamentStat } from '../types/tournament';
+import type {
+  CourtAllocationEntry,
+  ScheduleCapacityConfig,
+  StageScoringConfig,
+  TournamentMilestone,
+  TournamentStat,
+} from '../types/tournament';
 
-export const OFFICIAL_FIXTURES_PUBLISHED = false;
+export const OFFICIAL_FIXTURES_PUBLISHED = true;
+
+export const STAGE_SCORING_CONFIG: StageScoringConfig = {
+  groupStagePoints: 21,
+  knockoutStagePoints: 30,
+  finalsPoints: 30,
+  winTablePoints: 2,
+  lossTablePoints: 0,
+  tieBreakerRule: 'Total Points Scored',
+};
+
+export const SCHEDULE_CAPACITY_CONFIG: ScheduleCapacityConfig = {
+  weekdayMaxMatchesPerDay: 4,
+  weekendMaxMatchesPerDay: 8,
+  officialMatchCourts: ['Court 3', 'Court 4', 'Court 5'],
+  warmUpCourts: ['Court 1', 'Court 2'],
+};
+
+export const COURT_ALLOCATION: CourtAllocationEntry[] = [
+  {
+    court: 'Court 1',
+    role: 'warm-up',
+    purpose: 'Player warm-up, only if available',
+    availabilityNote: 'Subject to availability; never assigned to official tournament matches.',
+  },
+  {
+    court: 'Court 2',
+    role: 'warm-up',
+    purpose: 'Player warm-up, only if available',
+    availabilityNote: 'Subject to availability; never assigned to official tournament matches.',
+  },
+  {
+    court: 'Court 3',
+    role: 'official',
+    purpose: 'Official tournament matches',
+    availabilityNote: 'Dedicated official championship match court.',
+  },
+  {
+    court: 'Court 4',
+    role: 'official',
+    purpose: 'Official tournament matches',
+    availabilityNote: 'Dedicated official championship match court.',
+  },
+  {
+    court: 'Court 5',
+    role: 'official',
+    purpose: 'Official tournament matches',
+    availabilityNote: 'Dedicated official championship match court.',
+  },
+];
+
+export const COMMITTEE_AUTHORITY_STATEMENT =
+  "In case of any issues or problems, the committee's decision will be final.";
 
 export const TOURNAMENT_INFO = {
   title: 'CROWN TOURNAMENT 2026',
@@ -9,18 +67,21 @@ export const TOURNAMENT_INFO = {
   venueName: 'MUTHOOTH BADMINTON ACADEMY',
   venueAddress: 'Sabarmathi Road, Near Jawaharlal Nehru Stadium, Kaloor, Kochi, Kerala 682025, India',
   venueHighlights: [
-    '5 Championship Indoor Wooden Courts',
-    'Professional Glare-Free Tournament Lighting',
-    'Spectator Viewing & Players Lounge',
+    'Courts 3, 4 & 5: Official Tournament Matches',
+    'Courts 1 & 2: Player Warm-Up (Only If Available)',
+    'Glare-Free Lighting & Players Lounge',
   ],
   mapsUrl: 'https://maps.app.goo.gl/pQaPfBCuqZW93MdG8',
   dateRange: '28 NOVEMBER – 13 DECEMBER 2026',
+  finalsDate: '13 December 2026',
+  relayTournamentNote: '13 December 2026, after the finals',
   heroIntro:
     'Where precision meets passion, and partnerships define champions. A celebration of competitive badminton, bringing together the members of MUTHOOT ALWIN’S BADMINTON ACADEMY in pursuit of championship glory.',
+  committeeStatement: COMMITTEE_AUTHORITY_STATEMENT,
   rulesSummary: [
     { label: 'Format', value: "Men's doubles" },
-    { label: 'Match Length', value: 'Single game to 30 points' },
-    { label: 'Scoring System', value: 'Rally point scoring' },
+    { label: 'Group Stage Scoring', value: '21 points per game' },
+    { label: 'Knockouts & Finals', value: '30 points per game' },
     { label: 'Group Format', value: 'Round-robin group stage' },
     { label: 'Match Win', value: '2 table points' },
     { label: 'Match Loss', value: '0 table points' },
@@ -28,18 +89,9 @@ export const TOURNAMENT_INFO = {
   tieBreakers: [
     {
       rank: 1,
-      title: 'Head-to-Head',
-      description: 'Direct match outcome and head-to-head point differential between tied pairings.',
-    },
-    {
-      rank: 2,
-      title: 'Point Difference',
-      description: 'Net difference between cumulative points scored and points conceded across group play.',
-    },
-    {
-      rank: 3,
       title: 'Total Points Scored',
-      description: 'Aggregate rally points won across all group-stage matches.',
+      description:
+        'When pairs finish level on table points within a group, rankings are separated exclusively by cumulative rally points scored across group-stage play.',
     },
   ],
   lotteryStages: [
@@ -53,7 +105,7 @@ export const TOURNAMENT_INFO = {
       stage: '02',
       title: 'Group Position Allocation',
       description:
-        'A second independent lots draw assigns each formed pair to predefined proxy group slots (e.g., A1–A5, B1–B5) in full view of participants.',
+        'A second independent lots draw assigns each formed pair to predefined proxy group slots (e.g., A1–A5, B1–B4) in full view of participants.',
     },
     {
       stage: '03',
@@ -66,24 +118,24 @@ export const TOURNAMENT_INFO = {
 
 export const TOURNAMENT_STATS: TournamentStat[] = [
   {
-    label: 'Competitive Tiers',
-    value: '3 Categories',
-    detail: 'Blue, Orange & Yellow divisions',
+    label: 'Confirmed Draw',
+    value: '34 Doubles Pairs',
+    detail: '8 Blue · 17 Orange · 9 Yellow across 3 categories',
   },
   {
-    label: 'Championship Draw',
-    value: '36 Doubles Pairs',
-    detail: 'Balanced across 8 round-robin groups',
+    label: 'Group Schedule',
+    value: '56 Fixtures',
+    detail: '12 Blue · 28 Orange · 16 Yellow group-stage matches',
   },
   {
-    label: 'Verified Roster',
-    value: '69 Planned Players',
-    detail: 'Competing for crown championship titles',
+    label: 'Official Courts',
+    value: 'Courts 3, 4 & 5',
+    detail: 'Courts 1 & 2 for warm-up only, subject to availability',
   },
   {
-    label: 'Sprint Format',
-    value: '30 Points per Match',
-    detail: 'Single-game rally point intensity',
+    label: 'Stage Scoring',
+    value: '21 / 30 Points',
+    detail: '21 pts group stage · 30 pts knockouts & finals',
   },
 ];
 
@@ -113,9 +165,9 @@ export const TOURNAMENT_TIMELINE: TournamentMilestone[] = [
     phase: 'group',
   },
   {
-    date: '10 December 2026',
-    title: 'Target Group-Stage Completion',
-    description: 'Scheduled conclusion of all round-robin group battles and qualifier standings.',
+    date: '08 December 2026',
+    title: 'Scheduled Group-Stage Conclusion',
+    description: 'Completion of the 56 scheduled group-stage round-robin fixtures across Courts 3, 4, and 5.',
     phase: 'group',
   },
   {
@@ -129,5 +181,11 @@ export const TOURNAMENT_TIMELINE: TournamentMilestone[] = [
     title: 'Category Finals',
     description: 'Championship deciders and coronation of the 2026 Crown Tournament champions.',
     phase: 'finals',
+  },
+  {
+    date: '13 December 2026 (Post-Finals)',
+    title: 'Relay Tournament',
+    description: 'Scheduled to take place after the Crown Tournament finals conclude on 13 December 2026.',
+    phase: 'relay',
   },
 ];

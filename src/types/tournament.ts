@@ -2,15 +2,48 @@ export type CategoryId = 'blue' | 'orange' | 'yellow';
 
 export type GroupId = 'A' | 'B' | 'C' | 'D';
 
-export type MatchStatus = 'upcoming' | 'live' | 'completed' | 'postponed';
+export type MatchStatus =
+  | 'To Be Played'
+  | 'Postponed'
+  | 'Played'
+  | 'Rescheduled'
+  | 'Cancelled'
+  | 'Walkover';
 
 export type KnockoutRoundName = 'Quarter-finals' | 'Semifinals' | 'Final';
+
+export type OfficialCourt = 'Court 3' | 'Court 4' | 'Court 5';
+
+export type WarmUpCourt = 'Court 1' | 'Court 2';
+
+export interface CourtAllocationEntry {
+  court: WarmUpCourt | OfficialCourt;
+  role: 'warm-up' | 'official';
+  purpose: string;
+  availabilityNote: string;
+}
+
+export interface StageScoringConfig {
+  groupStagePoints: number;
+  knockoutStagePoints: number;
+  finalsPoints: number;
+  winTablePoints: number;
+  lossTablePoints: number;
+  tieBreakerRule: 'Total Points Scored';
+}
+
+export interface ScheduleCapacityConfig {
+  weekdayMaxMatchesPerDay: number;
+  weekendMaxMatchesPerDay: number;
+  officialMatchCourts: readonly OfficialCourt[];
+  warmUpCourts: readonly WarmUpCourt[];
+}
 
 export interface TournamentMilestone {
   date: string;
   title: string;
   description: string;
-  phase: 'verification' | 'registration' | 'lottery' | 'group' | 'contingency' | 'finals';
+  phase: 'verification' | 'registration' | 'lottery' | 'group' | 'contingency' | 'finals' | 'relay';
 }
 
 export interface TournamentStat {
@@ -24,6 +57,7 @@ export interface CategoryConfig {
   name: string;
   tierLabel: string;
   totalPairs: number;
+  totalFixtures: number;
   groupDistribution: string;
   groups: GroupId[];
   groupSizes: Record<string, number>;
@@ -41,8 +75,8 @@ export interface Player {
   id: string;
   name: string;
   categoryId: CategoryId;
+  pairId: string;
   club?: string;
-  isDemo?: boolean;
 }
 
 export interface DoublesPair {
@@ -50,11 +84,12 @@ export interface DoublesPair {
   pairCode: string;
   player1Id: string;
   player2Id: string;
+  player1Name: string;
+  player2Name: string;
   displayName: string;
   categoryId: CategoryId;
   groupId: GroupId;
   seedPosition: number;
-  isDemo?: boolean;
 }
 
 export interface GroupDefinition {
@@ -64,23 +99,28 @@ export interface GroupDefinition {
   name: string;
   capacity: number;
   pairIds: string[];
-  isDemo?: boolean;
 }
 
 export interface FixtureMatch {
   id: string;
   matchNumber: string;
+  scheduleOrder: number;
+  date: string;
+  isoDate: string;
+  day: string;
+  court: OfficialCourt;
   categoryId: CategoryId;
   groupId: GroupId;
   stage: 'group' | 'knockout';
+  stageLabel: 'Group Stage' | KnockoutRoundName;
   knockoutRound?: KnockoutRoundName;
+  match: string;
   pair1Id: string;
   pair2Id: string;
-  date: string;
-  time: string;
-  court: string;
+  score: string;
+  winner: string;
   status: MatchStatus;
-  isDemo?: boolean;
+  remarks: string;
 }
 
 export interface MatchResult {
@@ -89,7 +129,6 @@ export interface MatchResult {
   pair2Score: number;
   winnerPairId: string;
   notes?: string;
-  isDemo?: boolean;
 }
 
 export interface StandingRow {
@@ -105,7 +144,7 @@ export interface StandingRow {
   difference: number;
   tablePoints: number;
   qualified: boolean;
-  tieBreakerApplied?: 'head-to-head' | 'point-difference' | 'total-points' | null;
+  tieBreakerApplied?: 'total-points' | null;
 }
 
 export interface KnockoutSlot {
@@ -120,7 +159,7 @@ export interface KnockoutSlot {
   pair2Score?: number;
   winnerName?: string;
   status: MatchStatus;
-  court?: string;
+  court?: OfficialCourt;
   date?: string;
   time?: string;
 }
@@ -128,8 +167,7 @@ export interface KnockoutSlot {
 export interface CategoryStatistics {
   totalMatches: number;
   completedMatches: number;
-  liveMatches: number;
-  upcomingMatches: number;
+  toBePlayedMatches: number;
   postponedMatches: number;
   totalPointsScored: number;
   highestMatchTotal: number;

@@ -5,16 +5,49 @@ import type {
   DoublesPair,
   FixtureMatch,
   GroupId,
+  KnockoutRoundName,
   KnockoutSlot,
   MatchResult,
+  MatchStatus,
+  OfficialCourt,
   StandingRow,
 } from '../types/tournament';
+import { SCHEDULE_CAPACITY_CONFIG, STAGE_SCORING_CONFIG } from '../data/tournament';
+
+export function isCompletedMatchStatus(status: MatchStatus): boolean {
+  return status === 'Played' || status === 'Walkover';
+}
+
+export function sortFixturesChronologically(fixtures: FixtureMatch[]): FixtureMatch[] {
+  return [...fixtures].sort((a, b) => {
+    const dateCompare = a.isoDate.localeCompare(b.isoDate);
+    if (dateCompare !== 0) return dateCompare;
+    return a.scheduleOrder - b.scheduleOrder;
+  });
+}
+
+export function getTargetPointsForStage(
+  stage: 'group' | 'knockout',
+  knockoutRound?: KnockoutRoundName
+): number {
+  if (stage === 'group') {
+    return STAGE_SCORING_CONFIG.groupStagePoints;
+  }
+  if (knockoutRound === 'Final') {
+    return STAGE_SCORING_CONFIG.finalsPoints;
+  }
+  return STAGE_SCORING_CONFIG.knockoutStagePoints;
+}
+
+export function isOfficialMatchCourt(court: string): court is OfficialCourt {
+  return (SCHEDULE_CAPACITY_CONFIG.officialMatchCourts as readonly string[]).includes(court);
+}
 
 export function determineMatchWinner(
   fixture: FixtureMatch,
   result: MatchResult | undefined
 ): string | null {
-  if (!result || fixture.status !== 'completed') return null;
+  if (!result || !isCompletedMatchStatus(fixture.status)) return null;
   if (result.pair1Score === result.pair2Score) return result.winnerPairId || null;
   return result.pair1Score > result.pair2Score ? fixture.pair1Id : fixture.pair2Id;
 }
@@ -25,14 +58,13 @@ export function calculateMatchStatistics(
 ): CategoryStatistics {
   const resultMap = new Map(results.map((r) => [r.fixtureId, r]));
   let completedMatches = 0;
-  let liveMatches = 0;
-  let upcomingMatches = 0;
+  let toBePlayedMatches = 0;
   let postponedMatches = 0;
   let totalPointsScored = 0;
   let highestMatchTotal = 0;
 
   for (const fixture of fixtures) {
-    if (fixture.status === 'completed') {
+    if (isCompletedMatchStatus(fixture.status)) {
       completedMatches++;
       const res = resultMap.get(fixture.id);
       if (res) {
@@ -40,20 +72,17 @@ export function calculateMatchStatistics(
         totalPointsScored += matchTotal;
         if (matchTotal > highestMatchTotal) highestMatchTotal = matchTotal;
       }
-    } else if (fixture.status === 'live') {
-      liveMatches++;
-    } else if (fixture.status === 'postponed') {
+    } else if (fixture.status === 'Postponed') {
       postponedMatches++;
-    } else {
-      upcomingMatches++;
+    } else if (fixture.status === 'To Be Played' || fixture.status === 'Rescheduled') {
+      toBePlayedMatches++;
     }
   }
 
   return {
     totalMatches: fixtures.length,
     completedMatches,
-    liveMatches,
-    upcomingMatches,
+    toBePlayedMatches,
     postponedMatches,
     totalPointsScored,
     highestMatchTotal,
@@ -72,46 +101,11 @@ interface InternalStats {
 }
 
 /**
- * Computes head-to-head mini-standings exclusively among a subset of tied pairs.
- */
-function getHeadToHeadMetrics(
-  tiedPairIds: Set<string>,
-  groupFixtures: FixtureMatch[],
-  resultMap: Map<string, MatchResult>
-): Map<string, { points: number; diff: number; pf: number }> {
-  const h2h = new Map<string, { points: number; diff: number; pf: number }>();
-  tiedPairIds.forEach((id) => h2h.set(id, { points: 0, diff: 0, pf: 0 }));
-
-  for (const fix of groupFixtures) {
-    if (fix.status !== 'completed') continue;
-    if (!tiedPairIds.has(fix.pair1Id) || !tiedPairIds.has(fix.pair2Id)) continue;
-
-    const res = resultMap.get(fix.id);
-    if (!res) continue;
-
-    const s1 = h2h.get(fix.pair1Id)!;
-    const s2 = h2h.get(fix.pair2Id)!;
-
-    s1.pf += res.pair1Score;
-    s1.diff += res.pair1Score - res.pair2Score;
-    s2.pf += res.pair2Score;
-    s2.diff += res.pair2Score - res.pair1Score;
-
-    if (res.pair1Score > res.pair2Score) {
-      s1.points += 2;
-    } else if (res.pair2Score > res.pair1Score) {
-      s2.points += 2;
-    }
-  }
-
-  return h2h;
-}
-
-/**
- * Calculates full round-robin standings for a single group and applies tie-breakers:
- * 1. Head-to-head (mini-league points, then H2H point diff, then H2H points for)
- * 2. Overall Point Difference
- * 3. Overall Total Points Scored
+ * Calculates full round-robin standings for a single group.
+ * Ranking order:
+ * 1. Table Points (Win = 2, Loss = 0)
+ * 2. Tie-breaker: Total Points Scored ONLY
+ * Strictly ignores To Be Played, Postponed, Rescheduled, and Cancelled fixtures.
  */
 export function calculateGroupStandings(
   categoryId: CategoryId,
@@ -147,7 +141,7 @@ export function calculateGroupStandings(
   }
 
   for (const fixture of groupFixtures) {
-    if (fixture.status !== 'completed') continue;
+    if (!isCompletedMatchStatus(fixture.status)) continue;
     const result = resultMap.get(fixture.id);
     if (!result) continue;
 
@@ -164,12 +158,14 @@ export function calculateGroupStandings(
 
     if (result.pair1Score > result.pair2Score) {
       s1.won += 1;
-      s1.tablePoints += 2;
+      s1.tablePoints += STAGE_SCORING_CONFIG.winTablePoints;
       s2.lost += 1;
+      s2.tablePoints += STAGE_SCORING_CONFIG.lossTablePoints;
     } else if (result.pair2Score > result.pair1Score) {
       s2.won += 1;
-      s2.tablePoints += 2;
+      s2.tablePoints += STAGE_SCORING_CONFIG.winTablePoints;
       s1.lost += 1;
+      s1.tablePoints += STAGE_SCORING_CONFIG.lossTablePoints;
     }
   }
 
@@ -178,7 +174,7 @@ export function calculateGroupStandings(
     difference: s.pointsFor - s.pointsAgainst,
   }));
 
-  // Group by tablePoints first to resolve ties accurately within each points bucket
+  // Group by tablePoints first to resolve ties strictly by Total Points Scored
   const pointsBuckets = new Map<number, InternalStats[]>();
   for (const row of allStats) {
     const bucket = pointsBuckets.get(row.tablePoints) ?? [];
@@ -196,42 +192,23 @@ export function calculateGroupStandings(
       continue;
     }
 
-    const tiedIds = new Set(bucket.map((b) => b.pair.id));
-    const h2h = getHeadToHeadMetrics(tiedIds, groupFixtures, resultMap);
-
     const sortedBucket = [...bucket].sort((a, b) => {
-      const ha = h2h.get(a.pair.id)!;
-      const hb = h2h.get(b.pair.id)!;
-
-      // 1. Head-to-head
-      if (hb.points !== ha.points) return hb.points - ha.points;
-      if (hb.diff !== ha.diff) return hb.diff - ha.diff;
-      if (hb.pf !== ha.pf) return hb.pf - ha.pf;
-
-      // 2. Overall Point Difference
-      if (b.difference !== a.difference) return b.difference - a.difference;
-
-      // 3. Total Points Scored
+      // Sole Tie-breaker: Total Points Scored
       if (b.pointsFor !== a.pointsFor) return b.pointsFor - a.pointsFor;
-
       return a.pair.seedPosition - b.pair.seedPosition;
     });
 
-    sortedBucket.forEach((entry, idx) => {
-      let reason: StandingRow['tieBreakerApplied'] = null;
-      const peer = sortedBucket[idx === 0 ? 1 : idx - 1];
-      if (peer) {
-        const ha = h2h.get(entry.pair.id)!;
-        const hb = h2h.get(peer.pair.id)!;
-        if (ha.points !== hb.points || ha.diff !== hb.diff || ha.pf !== hb.pf) {
-          reason = 'head-to-head';
-        } else if (entry.difference !== peer.difference) {
-          reason = 'point-difference';
-        } else if (entry.pointsFor !== peer.pointsFor) {
-          reason = 'total-points';
-        }
-      }
-      ordered.push({ ...entry, tieBreakerApplied: reason });
+    sortedBucket.forEach((entry) => {
+      const hasPlayedMatches = entry.played > 0;
+      const separatedByTotalPoints =
+        hasPlayedMatches &&
+        sortedBucket.some(
+          (peer) => peer.pair.id !== entry.pair.id && peer.pointsFor !== entry.pointsFor
+        );
+      ordered.push({
+        ...entry,
+        tieBreakerApplied: separatedByTotalPoints ? 'total-points' : null,
+      });
     });
   }
 
@@ -260,20 +237,23 @@ export function identifyQualifyingPairs(
 }
 
 /**
- * Generates responsive Knockout Bracket rounds from group standings & rules:
- * - Blue / Yellow: Semifinals (A1 vs B2, B1 vs A2) -> Final
- * - Orange: Quarter-finals (A1 vs B2, C1 vs D2, B1 vs A2, D1 vs C2) -> Semifinals -> Final
+ * Generates Knockout Bracket structure from category rules without inventing dates, times,
+ * courts, or knockout opponents until group qualification and draw details are confirmed.
+ * - Blue / Yellow: Semifinals -> Final (30 points)
+ * - Orange: Quarter-finals -> Semifinals -> Final (30 points)
  */
 export function generateKnockoutParticipants(
   category: CategoryConfig,
   pairs: DoublesPair[],
   fixtures: FixtureMatch[],
-  results: MatchResult[],
-  hasData: boolean
+  results: MatchResult[]
 ): Record<string, KnockoutSlot[]> {
   const standingsByGroup: Partial<Record<GroupId, StandingRow[]>> = {};
+  const hasAnyCompletedResults = fixtures.some(
+    (f) => f.categoryId === category.id && isCompletedMatchStatus(f.status)
+  );
 
-  if (hasData) {
+  if (hasAnyCompletedResults) {
     for (const g of category.groups) {
       standingsByGroup[g] = calculateGroupStandings(
         category.id,
@@ -288,7 +268,7 @@ export function generateKnockoutParticipants(
 
   const getSeedDisplay = (groupId: GroupId, posIndex: number): string => {
     const table = standingsByGroup[groupId];
-    if (!hasData || !table || !table[posIndex]) {
+    if (!hasAnyCompletedResults || !table || !table[posIndex]) {
       return `Group ${groupId} #${posIndex + 1}`;
     }
     return `${table[posIndex].pairName} (${groupId}${posIndex + 1})`;
@@ -304,10 +284,7 @@ export function generateKnockoutParticipants(
         pair2Label: 'Group B Runner-up',
         pair1Name: getSeedDisplay('A', 0),
         pair2Name: getSeedDisplay('B', 1),
-        status: 'upcoming',
-        date: '11 Dec 2026',
-        time: '18:00',
-        court: 'Court 1',
+        status: 'To Be Played',
       },
       {
         id: 'or-qf-2',
@@ -317,10 +294,7 @@ export function generateKnockoutParticipants(
         pair2Label: 'Group D Runner-up',
         pair1Name: getSeedDisplay('C', 0),
         pair2Name: getSeedDisplay('D', 1),
-        status: 'upcoming',
-        date: '11 Dec 2026',
-        time: '18:45',
-        court: 'Court 2',
+        status: 'To Be Played',
       },
       {
         id: 'or-qf-3',
@@ -330,10 +304,7 @@ export function generateKnockoutParticipants(
         pair2Label: 'Group A Runner-up',
         pair1Name: getSeedDisplay('B', 0),
         pair2Name: getSeedDisplay('A', 1),
-        status: 'upcoming',
-        date: '11 Dec 2026',
-        time: '19:30',
-        court: 'Court 1',
+        status: 'To Be Played',
       },
       {
         id: 'or-qf-4',
@@ -343,10 +314,7 @@ export function generateKnockoutParticipants(
         pair2Label: 'Group C Runner-up',
         pair1Name: getSeedDisplay('D', 0),
         pair2Name: getSeedDisplay('C', 1),
-        status: 'upcoming',
-        date: '11 Dec 2026',
-        time: '20:15',
-        court: 'Court 2',
+        status: 'To Be Played',
       },
     ];
 
@@ -359,10 +327,7 @@ export function generateKnockoutParticipants(
         pair2Label: 'Winner QF 2',
         pair1Name: 'Winner QF 1',
         pair2Name: 'Winner QF 2',
-        status: 'upcoming',
-        date: '12 Dec 2026',
-        time: '18:30',
-        court: 'Court 1',
+        status: 'To Be Played',
       },
       {
         id: 'or-sf-2',
@@ -372,10 +337,7 @@ export function generateKnockoutParticipants(
         pair2Label: 'Winner QF 4',
         pair1Name: 'Winner QF 3',
         pair2Name: 'Winner QF 4',
-        status: 'upcoming',
-        date: '12 Dec 2026',
-        time: '19:30',
-        court: 'Court 1',
+        status: 'To Be Played',
       },
     ];
 
@@ -388,10 +350,8 @@ export function generateKnockoutParticipants(
         pair2Label: 'Winner SF 2',
         pair1Name: 'Winner SF 1',
         pair2Name: 'Winner SF 2',
-        status: 'upcoming',
-        date: '13 Dec 2026',
-        time: '20:00',
-        court: 'Centre Court',
+        status: 'To Be Played',
+        date: '13-Dec-2026',
       },
     ];
 
@@ -412,10 +372,7 @@ export function generateKnockoutParticipants(
       pair2Label: 'Group B Runner-up',
       pair1Name: getSeedDisplay('A', 0),
       pair2Name: getSeedDisplay('B', 1),
-      status: 'upcoming',
-      date: '11 Dec 2026',
-      time: category.id === 'blue' ? '18:00' : '19:00',
-      court: 'Court 1',
+      status: 'To Be Played',
     },
     {
       id: `${category.id}-sf-2`,
@@ -425,10 +382,7 @@ export function generateKnockoutParticipants(
       pair2Label: 'Group A Runner-up',
       pair1Name: getSeedDisplay('B', 0),
       pair2Name: getSeedDisplay('A', 1),
-      status: 'upcoming',
-      date: '11 Dec 2026',
-      time: category.id === 'blue' ? '18:45' : '19:45',
-      court: 'Court 2',
+      status: 'To Be Played',
     },
   ];
 
@@ -441,10 +395,8 @@ export function generateKnockoutParticipants(
       pair2Label: 'Winner SF 2',
       pair1Name: 'Winner SF 1',
       pair2Name: 'Winner SF 2',
-      status: 'upcoming',
-      date: '13 Dec 2026',
-      time: category.id === 'blue' ? '18:30' : '19:15',
-      court: 'Centre Court',
+      status: 'To Be Played',
+      date: '13-Dec-2026',
     },
   ];
 

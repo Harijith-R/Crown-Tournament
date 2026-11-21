@@ -1,6 +1,6 @@
 import type { GroupDefinition } from '../types/tournament';
 import { CATEGORIES } from './categories';
-import { DEMO_PAIRS } from './pairs';
+import { OFFICIAL_PAIRS } from './pairs';
 
 export const OFFICIAL_GROUPS: GroupDefinition[] = CATEGORIES.flatMap((category) =>
   category.groups.map((groupId) => ({
@@ -9,21 +9,10 @@ export const OFFICIAL_GROUPS: GroupDefinition[] = CATEGORIES.flatMap((category) 
     groupId,
     name: `Group ${groupId}`,
     capacity: category.groupSizes[groupId],
-    pairIds: [],
-    isDemo: false,
-  }))
-);
-
-export const DEMO_GROUPS: GroupDefinition[] = CATEGORIES.flatMap((category) =>
-  category.groups.map((groupId) => ({
-    id: `${category.id}-${groupId}`,
-    categoryId: category.id,
-    groupId,
-    name: `Group ${groupId}`,
-    capacity: category.groupSizes[groupId],
-    pairIds: DEMO_PAIRS.filter(
+    pairIds: OFFICIAL_PAIRS.filter(
       (p) => p.categoryId === category.id && p.groupId === groupId
-    ).map((p) => p.id),
-    isDemo: true,
+    )
+      .sort((a, b) => a.seedPosition - b.seedPosition)
+      .map((p) => p.id),
   }))
 );

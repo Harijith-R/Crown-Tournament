@@ -5,6 +5,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { motion } from 'framer-motion';
 import { ArrowRight, MapPin, ArrowUpRight, ChevronDown } from 'lucide-react';
 import {
+  COURT_ALLOCATION,
   TOURNAMENT_INFO,
   TOURNAMENT_STATS,
   TOURNAMENT_TIMELINE,
@@ -65,7 +66,7 @@ export function HomePage() {
                 <span aria-hidden="true" className="text-[#D4AF37]/50">
                   ·
                 </span>
-                <span className="text-[#A1A1A1]">MEN&apos;S DOUBLES</span>
+                <span className="text-[#A1A1A1]">BADMINTON DOUBLES</span>
               </div>
 
               <h1 className="font-display text-balance text-4xl font-bold leading-[1.08] tracking-[0.04em] text-white sm:text-5xl lg:text-6xl">
@@ -201,7 +202,7 @@ export function HomePage() {
                     <div className="flex items-baseline justify-between gap-4">
                       <dt className="text-[#A1A1A1]">Draw Size</dt>
                       <dd className="font-mono-data font-medium text-white">
-                        {category.totalPairs} pairs
+                        {category.totalPairs} pairs · {category.totalFixtures} fixtures
                       </dd>
                     </div>
                     <div className="flex items-baseline justify-between gap-4">
@@ -251,7 +252,7 @@ export function HomePage() {
                 MATCH FORMAT &amp; SCORING RULES
               </h2>
               <p className="mt-4 text-base text-[#A1A1A1] leading-relaxed">
-                Designed for relentless momentum—every fixture is decided in a single high-pressure 30-point rally game.
+                Group-stage fixtures are played as a single game to 21 points, escalating to 30-point games across all knockout stages and category finals.
               </p>
 
               <div className="mt-8 grid gap-4 sm:grid-cols-2">
@@ -272,37 +273,48 @@ export function HomePage() {
             </div>
 
             <div className="lg:col-span-6">
-              <div className="surface-panel-gold h-full rounded-sm p-7 sm:p-9">
-                <p className="text-xs font-semibold tracking-[0.2em] text-[#F5D77A]">
-                  GROUP STANDINGS TIE-BREAKERS
-                </p>
-                <h3 className="mt-2 font-display text-2xl font-bold text-white">
-                  THREE-TIER RESOLUTION ORDER
-                </h3>
-                <p className="mt-3 text-sm text-[#A1A1A1] leading-relaxed">
-                  When two or more pairs finish level on table points inside a group, qualification rankings are resolved strictly in the following order:
-                </p>
+              <div className="surface-panel-gold flex h-full flex-col justify-between rounded-sm p-7 sm:p-9">
+                <div>
+                  <p className="text-xs font-semibold tracking-[0.2em] text-[#F5D77A]">
+                    GROUP STANDINGS TIE-BREAKER
+                  </p>
+                  <h3 className="mt-2 font-display text-2xl font-bold text-white">
+                    TOTAL POINTS SCORED
+                  </h3>
+                  <p className="mt-3 text-sm text-[#A1A1A1] leading-relaxed">
+                    When two or more pairs finish level on table points inside a group, qualification rankings are resolved strictly using the single official tie-breaker:
+                  </p>
 
-                <ol className="mt-7 space-y-5">
-                  {TOURNAMENT_INFO.tieBreakers.map((tb) => (
-                    <li
-                      key={tb.rank}
-                      className="flex items-start gap-4 border-t border-[#D4AF37]/20 pt-5 first:border-t-0 first:pt-0"
-                    >
-                      <span className="font-mono-data flex h-8 w-8 shrink-0 items-center justify-center rounded-sm border border-[#D4AF37]/50 bg-[#D4AF37]/10 text-sm font-bold text-[#F5D77A]">
-                        {tb.rank}
-                      </span>
-                      <div>
-                        <p className="text-base font-semibold text-white">
-                          {tb.title}
-                        </p>
-                        <p className="mt-1 text-sm text-[#A1A1A1] leading-relaxed">
-                          {tb.description}
-                        </p>
-                      </div>
-                    </li>
-                  ))}
-                </ol>
+                  <ol className="mt-6 space-y-5">
+                    {TOURNAMENT_INFO.tieBreakers.map((tb) => (
+                      <li
+                        key={tb.rank}
+                        className="flex items-start gap-4"
+                      >
+                        <span className="font-mono-data flex h-8 w-8 shrink-0 items-center justify-center rounded-sm border border-[#D4AF37]/50 bg-[#D4AF37]/10 text-sm font-bold text-[#F5D77A]">
+                          {tb.rank}
+                        </span>
+                        <div>
+                          <p className="text-base font-semibold text-white">
+                            {tb.title}
+                          </p>
+                          <p className="mt-1 text-sm text-[#A1A1A1] leading-relaxed">
+                            {tb.description}
+                          </p>
+                        </div>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+
+                <div className="mt-8 border-t border-[#D4AF37]/30 pt-6">
+                  <p className="text-xs font-semibold tracking-[0.2em] text-[#F5D77A]">
+                    COMMITTEE AUTHORITY
+                  </p>
+                  <p className="mt-2 text-base font-medium leading-relaxed text-white">
+                    {TOURNAMENT_INFO.committeeStatement}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -327,17 +339,17 @@ export function HomePage() {
               {
                 step: 'STAGE 01',
                 title: 'GROUP STAGE',
-                detail: 'Round-robin battles across Blue, Orange, and Yellow pools (28 Nov – 10 Dec).',
+                detail: '21-point round-robin battles across Blue, Orange, and Yellow pools (28 Nov – 08 Dec).',
               },
               {
                 step: 'STAGE 02',
                 title: 'KNOCKOUTS',
-                detail: 'Top 2 from every group advance—Quarter-finals for Orange, Semifinals for Blue & Yellow.',
+                detail: '30-point single-elimination knockouts—Quarter-finals for Orange, Semifinals for Blue & Yellow.',
               },
               {
                 step: 'STAGE 03',
-                title: 'FINALS',
-                detail: 'Category championship deciders under prime evening lights on 13 December 2026.',
+                title: 'FINALS & RELAY',
+                detail: '30-point category finals on 13 December 2026, followed by the Relay tournament after the finals.',
               },
               {
                 step: 'STAGE 04',
@@ -374,7 +386,7 @@ export function HomePage() {
                 ORANGE CATEGORY PATH
               </p>
               <p className="mt-2 font-mono-data text-sm text-white">
-                4 Groups (5, 5, 4, 4) → Top 2/Group (8) → Quarter-finals → Semifinals → Final
+                4 Groups (5, 4, 4, 4) → Top 2/Group (8) → Quarter-finals → Semifinals → Final
               </p>
             </div>
             <div className="surface-panel-gold rounded-sm p-6">
@@ -382,7 +394,7 @@ export function HomePage() {
                 YELLOW CATEGORY PATH
               </p>
               <p className="mt-2 font-mono-data text-sm text-white">
-                2 Groups (5 each) → Top 2/Group (4) → Semifinals → Final
+                2 Groups (5, 4) → Top 2/Group (4) → Semifinals → Final
               </p>
             </div>
           </div>
@@ -477,16 +489,25 @@ export function HomePage() {
                   {TOURNAMENT_INFO.venueAddress}
                 </p>
 
-                <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs tracking-[0.1em] text-[#A1A1A1]">
-                  {TOURNAMENT_INFO.venueHighlights.map((highlight, idx) => (
-                    <span key={highlight} className="flex items-center gap-4">
-                      {idx > 0 && (
-                        <span aria-hidden="true" className="text-[#D4AF37]/50">
-                          ·
-                        </span>
-                      )}
-                      <span className="text-[#E5E5E5]">{highlight}</span>
-                    </span>
+                <div className="mt-6 grid gap-2.5 sm:grid-cols-2">
+                  {COURT_ALLOCATION.map((entry) => (
+                    <div
+                      key={entry.court}
+                      className="flex items-center justify-between gap-3 rounded-sm border border-white/10 bg-[#090909]/65 px-3.5 py-2.5 text-xs"
+                    >
+                      <span className="font-mono-data font-semibold text-[#F5D77A]">
+                        {entry.court}
+                      </span>
+                      <span
+                        className={
+                          entry.role === 'official'
+                            ? 'text-white font-medium text-right'
+                            : 'text-[#A1A1A1] text-right'
+                        }
+                      >
+                        {entry.purpose}
+                      </span>
+                    </div>
                   ))}
                 </div>
 
@@ -545,9 +566,11 @@ export function HomePage() {
                       strokeDasharray="4 3"
                     />
                   </svg>
-                  <div className="mt-4 flex items-center justify-between text-xs text-[#A1A1A1]">
+                  <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-xs text-[#A1A1A1]">
                     <span>KALOOR · KOCHI · KERALA</span>
-                    <span className="font-mono-data text-[#F5D77A]">COURTS 1–5</span>
+                    <span className="font-mono-data text-[#F5D77A]">
+                      COURTS 3–5 OFFICIAL · 1–2 WARM-UP IF AVAILABLE
+                    </span>
                   </div>
                 </div>
               </div>
